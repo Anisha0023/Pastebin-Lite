@@ -1,31 +1,31 @@
-const db = require('./index');
+const { kv } = require('@vercel/kv');
 
-async function createPaste(paste) {
-	const { id, content, created_at, expires_at, max_views } = paste;
-
-	const sql = `
-    INSERT INTO pastes (id, content, created_at, expires_at, max_views,views_used)
-    VALUES (?, ?, ?, ?, ?,0)
-  `;
-
-	await db.run(sql, [id, content, created_at, expires_at, max_views]);
+function key(id) {
+  return `paste:${id}`;
 }
 
-async function incrementView(id) {
-	await db.run(
-		`update pastes set view_used=view_used+1 
-		where id=?`,
-		id,
-	);
+async function createPaste(paste) {
+  await kv.set(key(paste.id), paste);
 }
 
 async function getPasteById(id) {
-	return new Promise((resolve, reject) => {
-		db.get('SELECT * FROM pastes WHERE id = ?', [id], (err, row) => {
-			if (err) return reject(err);
-			resolve(row);
-		});
-	});
+  return await kv.get(key(id));
 }
 
-module.exports = { createPaste, getPasteById, incrementView };
+/**
+ * Atomic view increment
+ * Returns true if incremented, false if not found
+ */
+async function incrementView(id) {
+  const exists = await kv.exists(key(id));
+  if (!exists) return false;
+
+  await kv.hincrby(key(id), 'views_used', 1);
+  return true;
+}
+
+module.exports = {
+  createPaste,
+  getPasteById,
+  incrementView
+};
