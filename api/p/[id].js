@@ -1,5 +1,5 @@
-import { viewPasteHtml } from "../../src/controllers/pasteController.js";
-import { setCors } from "../../src/utils/cors.js";
+import { viewPasteHtml } from "../../backend/src/controllers/pasteController.js";
+import { setCors } from "../../backend/src/utils/cors.js";
 
 
 export default async function handler(req, res) {

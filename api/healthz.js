@@ -1,5 +1,5 @@
 import { kv } from '@vercel/kv';
-import { setCors } from '../src/utils/cors';
+import { setCors } from '../backend/src/utils/cors';
 
 
 export default async function handler(req, res) {
