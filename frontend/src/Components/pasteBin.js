@@ -25,7 +25,7 @@ function Pastebin() {
 		setError('');
 
 		try {
-			const res = await axios.post(`${API_BASE}/pastes`, {
+			const res = await axios.post(`${API_BASE}/api/pastes`, {
 				content: pasteContent.content,
 				ttl_seconds: pasteContent.ttl_seconds
 					? Number(pasteContent.ttl_seconds)
@@ -52,7 +52,7 @@ function Pastebin() {
 		setError('');
 
 		try {
-			const res = await axios.get(`${API_BASE}/pastes/${pasteId}`);
+			const res = await axios.get(`${API_BASE}/api/pastes/${pasteId}`);
 			setPasteData(res.data);
 		} catch (err) {
 			setPasteData(null);
