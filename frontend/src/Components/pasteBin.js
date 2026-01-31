@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE =process.env.REACT_APP_API_BASE;
 
 function Pastebin() {
-	// FORM STATE (strings only for inputs)
+
 	const [pasteContent, setPasteContent] = useState({
 		content: '',
 		ttl_seconds: '',
@@ -15,13 +15,10 @@ function Pastebin() {
 	const [pasteData, setPasteData] = useState(null);
 	const [error, setError] = useState('');
 
-	// SEPARATE LOADING STATES
 	const [createLoading, setCreateLoading] = useState(false);
 	const [fetchLoading, setFetchLoading] = useState(false);
-	const [htmlLoading, setHtmlLoading] = useState(false);
 
-	// CREATE PASTE
-	const handleCreatePaste = async () => {
+		const handleCreatePaste = async () => {
 		if (!pasteContent.content.trim()) return;
 
 		setCreateLoading(true);
@@ -48,7 +45,6 @@ function Pastebin() {
 		}
 	};
 
-	// FETCH JSON PASTE
 	const handleFetchPaste = async () => {
 		if (!pasteId.trim()) return;
 
@@ -66,23 +62,6 @@ function Pastebin() {
 		}
 	};
 
-	// FETCH HTML PASTE
-	const handleFetchPasteHtml = async () => {
-		if (!pasteId.trim()) return;
-
-		setHtmlLoading(true);
-		setError('');
-
-		try {
-			const res = await axios.get(`${API_BASE}/p/${pasteId}`);
-			setPasteData(res.data);
-		} catch (err) {
-			setPasteData(null);
-			setError(err.response?.data?.error || 'Paste not found or expired.');
-		} finally {
-			setHtmlLoading(false);
-		}
-	};
 
 	return (
 		<div style={styles.container}>
@@ -188,25 +167,7 @@ function Pastebin() {
 				)}
 			</div>
 
-			{/* VIEW HTML */}
-			<div style={styles.box}>
-				<h2>View a Paste (HTML)</h2>
-
-				<input
-					style={styles.input}
-					value={pasteId}
-					onChange={(e) => setPasteId(e.target.value)}
-					placeholder="Enter Paste ID"
-				/>
-
-				<button
-					style={styles.button}
-					onClick={handleFetchPasteHtml}
-					disabled={htmlLoading}
-				>
-					{htmlLoading ? 'Loading...' : 'Fetch Paste'}
-				</button>
-			</div>
+			
 		</div>
 	);
 }

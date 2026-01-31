@@ -17,7 +17,10 @@ async function incrementView(id) {
   const exists = await kv.exists(viewKey);
   if (!exists) return false;
 
-  await kv.incr(viewKey);
+  const current = await kv.get(viewKey);
+  if (parseInt(current, 10) <= 0) return false;
+
+  await kv.decr(viewKey);
   return true;
 }
 
