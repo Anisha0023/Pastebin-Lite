@@ -1,5 +1,6 @@
 export function setCors(res) {
   const origin = req.headers.origin;
+  console.log(origin)
     if (origin && origin.endsWith(".vercel.app")) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
