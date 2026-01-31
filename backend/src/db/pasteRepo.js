@@ -12,15 +12,12 @@ async function getPasteById(id) {
   return await kv.get(key(id));
 }
 
-/**
- * Atomic view increment
- * Returns true if incremented, false if not found
- */
 async function incrementView(id) {
-  const exists = await kv.exists(key(id));
+  const viewKey = key(`${id}:views`);
+  const exists = await kv.exists(viewKey);
   if (!exists) return false;
 
-  await kv.hincrby(key(id), 'views_used', 1);
+  await kv.incr(viewKey);
   return true;
 }
 

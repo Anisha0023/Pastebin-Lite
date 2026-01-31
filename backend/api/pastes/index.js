@@ -1,3 +1,4 @@
+
 const { createPaste } = require('../../src/controllers/pasteController');
 const { setCors } = require('../../src/utils/cors');
 

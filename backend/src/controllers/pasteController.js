@@ -1,4 +1,4 @@
-const service = require('../services/pasteService.js');
+import * as pasteService from '../services/pasteService.js';
 
 function escapeHtml(str) {
   return str
@@ -7,7 +7,7 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;');
 }
 
-async function createPaste(req) {
+export async function createPaste(req) {
   const { content, max_views, ttl_seconds } = req.body;
 
   if (!content || typeof content !== 'string' || content.trim().length === 0) {
@@ -20,7 +20,7 @@ async function createPaste(req) {
     throw { status: 400, message: 'max_views must be >= 1' };
   }
 
-  return await service.createPaste({
+  return await pasteService.createPaste({
     content,
     ttl_seconds,
     max_views,
@@ -43,10 +43,9 @@ export async function getPasteById(req, res, id) {
 }
 
 
-export async function viewPasteHtml(req, res) {
-  const { id } = req.params;
-
-  const data = await pasteService.getPasteById(id, req);
+export async function viewPasteHtml(req, res, id) {
+ 
+  const data = await pasteService.getPasteById(id);
 
   if (!data) {
     return res.status(404).send('Paste not found');
@@ -63,4 +62,3 @@ export async function viewPasteHtml(req, res) {
   `);
 }
 
-module.exports = { createPaste, getPasteById, viewPasteHtml };

@@ -1,12 +1,13 @@
 import { viewPasteHtml } from "../../src/controllers/pasteController.js";
+import { setCors } from "../../src/utils/cors.js";
 
 
 export default async function handler(req, res) {
-    try {
-    const html = await viewPasteHtml(req);
+  setCors(res)
+  const { id } = req.query;
+  try {
+    await viewPasteHtml(req, res,id);
 
-    res.setHeader('Content-Type', 'text/html');
-    res.status(200).send(html);
   } catch {
     res.status(404).send('Not Found');
   }

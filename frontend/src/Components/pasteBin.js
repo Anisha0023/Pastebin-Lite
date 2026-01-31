@@ -4,26 +4,35 @@ import axios from 'axios';
 const API_BASE = 'http://localhost:3000/api';
 
 function Pastebin() {
+	// FORM STATE (strings only for inputs)
 	const [pasteContent, setPasteContent] = useState({
 		content: '',
-		ttl_seconds: null,
-		max_views: null,
+		ttl_seconds: '',
+		max_views: '',
 	});
+
 	const [pasteId, setPasteId] = useState('');
 	const [pasteData, setPasteData] = useState(null);
-	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 
+	// SEPARATE LOADING STATES
+	const [createLoading, setCreateLoading] = useState(false);
+	const [fetchLoading, setFetchLoading] = useState(false);
+	const [htmlLoading, setHtmlLoading] = useState(false);
+
+	// CREATE PASTE
 	const handleCreatePaste = async () => {
 		if (!pasteContent.content.trim()) return;
 
-		setLoading(true);
+		setCreateLoading(true);
 		setError('');
 
 		try {
 			const res = await axios.post(`${API_BASE}/pastes`, {
 				content: pasteContent.content,
-				ttl_seconds: Number(pasteContent.ttl_seconds),
+				ttl_seconds: pasteContent.ttl_seconds
+					? Number(pasteContent.ttl_seconds)
+					: null,
 				max_views: pasteContent.max_views
 					? Number(pasteContent.max_views)
 					: null,
@@ -31,18 +40,19 @@ function Pastebin() {
 
 			setPasteId(res.data.id);
 			setPasteData(null);
-			setPasteContent({ content: '', ttl_seconds: null, max_views: null });
+			setPasteContent({ content: '', ttl_seconds: '', max_views: '' });
 		} catch (err) {
 			setError(err.response?.data?.errors || 'Failed to create paste.');
+		} finally {
+			setCreateLoading(false);
 		}
-
-		setLoading(false);
 	};
 
+	// FETCH JSON PASTE
 	const handleFetchPaste = async () => {
 		if (!pasteId.trim()) return;
 
-		setLoading(true);
+		setFetchLoading(true);
 		setError('');
 
 		try {
@@ -51,22 +61,45 @@ function Pastebin() {
 		} catch (err) {
 			setPasteData(null);
 			setError(err.response?.data?.error || 'Paste not found or expired.');
+		} finally {
+			setFetchLoading(false);
 		}
+	};
 
-		setLoading(false);
+	// FETCH HTML PASTE
+	const handleFetchPasteHtml = async () => {
+		if (!pasteId.trim()) return;
+
+		setHtmlLoading(true);
+		setError('');
+
+		try {
+			const res = await axios.get(`${API_BASE}/p/${pasteId}`);
+			setPasteData(res.data);
+		} catch (err) {
+			setPasteData(null);
+			setError(err.response?.data?.error || 'Paste not found or expired.');
+		} finally {
+			setHtmlLoading(false);
+		}
 	};
 
 	return (
 		<div style={styles.container}>
 			<h1>Pastebin Lite</h1>
 
+			{/* CREATE */}
 			<div style={styles.box}>
 				<h2>Create a Paste</h2>
+
 				<textarea
 					style={styles.textarea}
 					value={pasteContent.content}
 					onChange={(e) =>
-						setPasteContent((prev) => ({ ...prev, content: e.target.value }))
+						setPasteContent((prev) => ({
+							...prev,
+							content: e.target.value,
+						}))
 					}
 					placeholder="Enter your text here..."
 				/>
@@ -85,6 +118,7 @@ function Pastebin() {
 						}
 						placeholder="TTL (seconds)"
 					/>
+
 					<input
 						type="number"
 						min="1"
@@ -103,30 +137,35 @@ function Pastebin() {
 				<button
 					style={styles.button}
 					onClick={handleCreatePaste}
-					disabled={loading}>
-					{loading ? 'Creating...' : 'Create Paste'}
+					disabled={createLoading}
+				>
+					{createLoading ? 'Creating...' : 'Create Paste'}
 				</button>
 
 				{pasteId && (
 					<p>
-						Your Paste ID: <strong>{pasteId}</strong>
+						Paste ID: <strong>{pasteId}</strong>
 					</p>
 				)}
 			</div>
 
+			{/* VIEW JSON */}
 			<div style={styles.box}>
 				<h2>View a Paste</h2>
+
 				<input
 					style={styles.input}
 					value={pasteId}
 					onChange={(e) => setPasteId(e.target.value)}
 					placeholder="Enter Paste ID"
 				/>
+
 				<button
 					style={styles.button}
 					onClick={handleFetchPaste}
-					disabled={loading}>
-					{loading ? 'Loading...' : 'Fetch Paste'}
+					disabled={fetchLoading}
+				>
+					{fetchLoading ? 'Loading...' : 'Fetch Paste'}
 				</button>
 
 				{error && <p style={{ color: 'red' }}>{error}</p>}
@@ -134,16 +173,39 @@ function Pastebin() {
 				{pasteData && (
 					<div style={styles.pasteBox}>
 						<p>{pasteData.content}</p>
+
 						{pasteData.remaining_views !== null && (
 							<p>Remaining Views: {pasteData.remaining_views}</p>
 						)}
+
 						{pasteData.expires_at && (
 							<p>
-								Expires At: {new Date(pasteData.expires_at).toLocaleString()}
+								Expires At:{' '}
+								{new Date(pasteData.expires_at).toLocaleString()}
 							</p>
 						)}
 					</div>
 				)}
+			</div>
+
+			{/* VIEW HTML */}
+			<div style={styles.box}>
+				<h2>View a Paste (HTML)</h2>
+
+				<input
+					style={styles.input}
+					value={pasteId}
+					onChange={(e) => setPasteId(e.target.value)}
+					placeholder="Enter Paste ID"
+				/>
+
+				<button
+					style={styles.button}
+					onClick={handleFetchPasteHtml}
+					disabled={htmlLoading}
+				>
+					{htmlLoading ? 'Loading...' : 'Fetch Paste'}
+				</button>
 			</div>
 		</div>
 	);
@@ -169,7 +231,6 @@ const styles = {
 		marginBottom: '8px',
 		borderRadius: '4px',
 		border: '1px solid #ccc',
-		fontFamily: 'inherit',
 	},
 	inputGroup: {
 		display: 'flex',
